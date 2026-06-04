@@ -4,9 +4,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="Echo Music Custom Canvas Guide - Learn how to add and discover user-uploaded background videos for the Echo Music App.">
-    <title>Echo Music Canvas Hub</title>
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#121212">
+    <title>Echo Music Canvas Hub - Custom Motion Visualizers</title>
+    <meta name="description" content="Discover, search, and submit custom vertical background visualizers and music video loops for the Echo Music App. Browse our active canvas database.">
+    <meta name="keywords" content="Echo Music, Canvas, Music App, Background visualizers, custom canvas, music video loops, Spotify Canvas clone, vertical visualizer, M3U8, MP4">
+    <link rel="canonical" href="https://canvas.echomusic.fun/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://canvas.echomusic.fun/">
+    <meta property="og:title" content="Echo Music Canvas Hub - Custom Motion Visualizers">
+    <meta property="og:description" content="Discover, search, and submit custom vertical background visualizers and music video loops for the Echo Music App.">
+    <meta property="og:image" content="https://canvas.echomusic.fun/App%20Logo/echo.png">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://canvas.echomusic.fun/">
+    <meta property="twitter:title" content="Echo Music Canvas Hub - Custom Motion Visualizers">
+    <meta property="twitter:description" content="Discover, search, and submit custom vertical background visualizers and music video loops for the Echo Music App.">
+    <meta property="twitter:image" content="https://canvas.echomusic.fun/App%20Logo/echo.png">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Echo Music Canvas",
+      "url": "https://canvas.echomusic.fun/",
+      "description": "Discover and submit custom vertical background visualizers and music videos for the Echo Music App.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://canvas.echomusic.fun/?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
     <link rel="icon" type="image/png" href="App Logo/echo.png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -190,6 +221,23 @@
             }
         ];
 
+        function handleSearch(term) {
+            if (term.trim() === '') {
+                renderGallery(allItems.slice(0, 3));
+                renderAvailability(allItems);
+                const isLocal = window.location.protocol === 'file:';
+                document.getElementById('song-count').textContent = `${allItems.length} ${isLocal ? 'preview' : 'active'} canvases`;
+            } else {
+                const filtered = allItems.filter(item => {
+                    const combined = `${item.song} ${item.artist}`.toLowerCase();
+                    return combined.includes(term);
+                });
+                renderGallery(filtered);
+                renderAvailability(filtered);
+                document.getElementById('song-count').textContent = filtered.length === 1 ? '1 match found' : `${filtered.length} matches found`;
+            }
+        }
+
         async function loadCanvases() {
             try {
                 const response = await fetch(`./canvas.json?v=${Date.now()}`);
@@ -198,10 +246,14 @@
                 const data = await response.json();
                 allItems = data.items || [];
 
-                renderGallery(allItems.slice(0, 3));
-                renderAvailability(allItems);
-
-                document.getElementById('song-count').textContent = `${allItems.length} active canvases`;
+                const urlParams = new URLSearchParams(window.location.search);
+                const query = urlParams.get('search');
+                if (query) {
+                    document.getElementById('search-input').value = query;
+                    handleSearch(query.toLowerCase());
+                } else {
+                    handleSearch('');
+                }
             } catch (error) {
                 console.warn("CORS/Fetch restriction detected. Falling back to local preview database.", error);
                 
@@ -216,10 +268,14 @@
                     warningBanner.style.display = 'flex';
                 }
 
-                renderGallery(allItems.slice(0, 3));
-                renderAvailability(allItems);
-
-                document.getElementById('song-count').textContent = `${allItems.length} preview canvases`;
+                const urlParams = new URLSearchParams(window.location.search);
+                const query = urlParams.get('search');
+                if (query) {
+                    document.getElementById('search-input').value = query;
+                    handleSearch(query.toLowerCase());
+                } else {
+                    handleSearch('');
+                }
             }
         }
 
@@ -322,21 +378,7 @@
         }
 
         document.getElementById('search-input').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-
-            if (term.trim() === '') {
-                renderGallery(allItems.slice(0, 3));
-                renderAvailability(allItems);
-                document.getElementById('song-count').textContent = `${allItems.length} active canvases`;
-            } else {
-                const filtered = allItems.filter(item =>
-                    item.song.toLowerCase().includes(term) ||
-                    item.artist.toLowerCase().includes(term)
-                );
-                renderGallery(filtered);
-                renderAvailability(filtered);
-                document.getElementById('song-count').textContent = filtered.length === 1 ? '1 match found' : `${filtered.length} matches found`;
-            }
+            handleSearch(e.target.value.toLowerCase());
         });
 
         document.addEventListener('DOMContentLoaded', loadCanvases);
